@@ -57,3 +57,43 @@ func NewWithNameAndLogger(name string, l *logrus.Logger) echo.MiddlewareFunc {
 		}
 	}
 }
+
+// Another variant for better performance.
+// With single log entry and time format.
+func LogrusLogger(name string, l *logrus.Logger, timeFormat string) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			start := time.Now()
+			isError := false
+
+			if err := next(c); err != nil {
+				c.Error(err)
+				isError = true
+			}
+
+			latency := time.Since(start)
+
+			entry := l.WithFields(logrus.Fields{
+				"path":       c.Request().RequestURI,
+				"method":     c.Request().Method,
+				"ip":         c.Request().RemoteAddr,
+				"status":  c.Response().Status(),
+				"latency": latency,
+				"time":    time.Now().Format(timeFormat),
+			})
+
+			if reqID := c.Request().Header.Get("X-Request-Id"); reqID != "" {
+				entry = entry.WithField("request_id", reqID)
+			}
+
+			// Check middleware error
+			if isError {
+				entry.Error("error by handling request")
+			} else {
+				entry.Info("completed handling request")
+			}
+
+			return nil
+		}
+	}
+}
