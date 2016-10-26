@@ -25,16 +25,16 @@ func NewWithName(name string) echo.MiddlewareFunc {
 // and logger
 func NewWithNameAndLogger(name string, l *logrus.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c *echo.Context) error {
+		return func(c echo.Context) error {
 			start := time.Now()
 
 			entry := l.WithFields(logrus.Fields{
-				"request": c.Request().RequestURI,
-				"method":  c.Request().Method,
-				"remote":  c.Request().RemoteAddr,
+				"request": c.Request().URI(),
+				"method":  c.Request().Method(),
+				"remote":  c.Request().RemoteAddress(),
 			})
 
-			if reqID := c.Request().Header.Get("X-Request-Id"); reqID != "" {
+			if reqID := c.Request().Header().Get("X-Request-Id"); reqID != "" {
 				entry = entry.WithField("request_id", reqID)
 			}
 
@@ -62,7 +62,7 @@ func NewWithNameAndLogger(name string, l *logrus.Logger) echo.MiddlewareFunc {
 // With single log entry and time format.
 func LogrusLogger(name string, l *logrus.Logger, timeFormat string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c *echo.Context) error {
+		return func(c echo.Context) error {
 			start := time.Now()
 			isError := false
 
@@ -74,15 +74,15 @@ func LogrusLogger(name string, l *logrus.Logger, timeFormat string) echo.Middlew
 			latency := time.Since(start)
 
 			entry := l.WithFields(logrus.Fields{
-				"path":       c.Request().RequestURI,
-				"method":     c.Request().Method,
-				"ip":         c.Request().RemoteAddr,
+				"path":    c.Request().URI(),
+				"method":  c.Request().Method(),
+				"ip":      c.Request().RemoteAddress(),
 				"status":  c.Response().Status(),
 				"latency": latency,
 				"time":    time.Now().Format(timeFormat),
 			})
 
-			if reqID := c.Request().Header.Get("X-Request-Id"); reqID != "" {
+			if reqID := c.Request().Header().Get("X-Request-Id"); reqID != "" {
 				entry = entry.WithField("request_id", reqID)
 			}
 
