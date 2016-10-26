@@ -65,6 +65,10 @@ func NewWithNameAndLogger(name string, l *logrus.Logger) echo.MiddlewareFunc {
 	}
 }
 
+func NewWithTimeFormat(timeFormat string) echo.MiddlewareFunc {
+	return LogrusLogger(logrus.StandardLogger(), timeFormat)
+}
+
 // Another variant for better performance.
 // With single log entry and time format.
 func LogrusLogger(l *logrus.Logger, timeFormat string) echo.MiddlewareFunc {
