@@ -9,7 +9,14 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
+	"os"
 )
+
+var host string
+
+func init() {
+	host, _ = os.Hostname()
+}
 
 // New returns a new middleware handler with a default name and logger
 func New() echo.MiddlewareFunc {
@@ -60,7 +67,7 @@ func NewWithNameAndLogger(name string, l *logrus.Logger) echo.MiddlewareFunc {
 
 // Another variant for better performance.
 // With single log entry and time format.
-func LogrusLogger(name string, l *logrus.Logger, timeFormat string) echo.MiddlewareFunc {
+func LogrusLogger(l *logrus.Logger, timeFormat string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			start := time.Now()
@@ -74,6 +81,7 @@ func LogrusLogger(name string, l *logrus.Logger, timeFormat string) echo.Middlew
 			latency := time.Since(start)
 
 			entry := l.WithFields(logrus.Fields{
+				"server":  host,
 				"path":    c.Request().URI(),
 				"method":  c.Request().Method(),
 				"ip":      c.Request().RemoteAddress(),
