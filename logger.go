@@ -7,9 +7,10 @@ import (
 	"net/http"
 	"time"
 
+	"os"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/labstack/echo"
-	"os"
 )
 
 var host string
@@ -45,8 +46,6 @@ func NewWithNameAndLogger(name string, l *logrus.Logger) echo.MiddlewareFunc {
 				entry = entry.WithField("request_id", reqID)
 			}
 
-			entry.Info("started handling request")
-
 			if err := next(c); err != nil {
 				c.Error(err)
 			}
@@ -58,7 +57,7 @@ func NewWithNameAndLogger(name string, l *logrus.Logger) echo.MiddlewareFunc {
 				"text_status": http.StatusText(c.Response().Status()),
 				"took":        latency,
 				fmt.Sprintf("measure#%s.latency", name): latency.Nanoseconds(),
-			}).Info("completed handling request")
+			}).Info()
 
 			return nil
 		}
