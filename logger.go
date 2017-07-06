@@ -10,7 +10,7 @@ import (
 	"os"
 
 	"github.com/Sirupsen/logrus"
-	"gopkg.in/labstack/echo.v3"
+	"github.com/labstack/echo"
 )
 
 var host string
