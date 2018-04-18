@@ -4,6 +4,7 @@ package echologrus // fknsrs.biz/p/echo-logrus
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -59,6 +60,32 @@ func NewWithNameAndLogger(name string, l *logrus.Logger) echo.MiddlewareFunc {
 				fmt.Sprintf("measure#%s.latency", name): latency.Nanoseconds(),
 			}).Info()
 
+			return nil
+		}
+	}
+}
+
+func StabilizationLogger(l *logrus.Logger) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			start := time.Now()
+
+			if err := next(c); err != nil {
+				c.Error(err)
+			}
+
+			latency := time.Since(start)
+
+			body, _ := ioutil.ReadAll(c.Request().Body)
+
+			l.Infof(" - index:server_api,game_id:,member_no:-1,method:%v,uri:%v,return_code:%v,elapsed_time:%v,timestamp:%v,request_body:%v ",
+				c.Request().Method,
+				c.Request().RequestURI,
+				c.Response().Status,
+				latency.Nanoseconds()/1000000,
+				start.UnixNano()/1000000,
+				body,
+			)
 			return nil
 		}
 	}
